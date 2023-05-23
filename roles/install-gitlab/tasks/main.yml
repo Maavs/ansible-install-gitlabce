@@ -1,2 +1,45 @@
 ---
 # tasks file for roles/install-gitlab
+
+- name: Update packages list
+  apt:
+    update_cache: true
+  become: yes
+  register: result_apt_update
+  changed_when: false
+
+- name: Install a list of packages
+  apt:
+    pkg:
+    - curl
+    - openssh-server
+    - ca-certificates 
+    - perl
+    - postfix
+  become: yes
+  register: result_install_packages
+  when: result_apt_update.failed == false
+
+- name: Download & execute Gitlab installation script
+  get_url:
+    shell: curl https://packages.gitlab.com/install/repositories/gitlab/gitlab-ee/script.deb.sh | sudo bash
+  register: result_dl_gitlab_script
+  when: result_install_packages.failed == false
+
+- name: Install Gitlab
+  get_url:
+    shell: EXTERNAL_URL="https://gitlab.digidyn.ad" apt-get install gitlab-ce
+    become: yes
+    register: result_install_gitlab
+  when: result_dl_gitlab_script.failed == false
+
+- name: Read initial_root_password file
+  shell: "cat /etc/gitlab/initial_root_password | grep Password:"
+  become: yes
+  register: read_root_passwd
+  when: result_install_gitlab.failed == false
+
+- name: Afficher le résultat
+  debug:
+    var: read_root_passwd.stdout_lines
+  when: result_install_gitlab.failed == false
