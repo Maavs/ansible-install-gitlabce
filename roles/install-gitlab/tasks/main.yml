@@ -8,7 +8,7 @@
   register: result_apt_update
   changed_when: false
 
-- name: Install a list of packages
+- name: Install required packages
   apt:
     pkg:
     - curl
@@ -20,16 +20,32 @@
   register: result_install_packages
   when: result_apt_update.failed == false
 
-- name: Download & execute Gitlab installation script
-  shell: curl https://packages.gitlab.com/install/repositories/gitlab/gitlab-ee/script.deb.sh | sudo bash
+- name: Download Gitlab installation script
+  get_url:
+    url: https://packages.gitlab.com/install/repositories/gitlab/gitlab-ce/script.deb.sh
+    dest: /tmp/script_gitlab.sh
+    mode: '0500'
   register: result_dl_gitlab_script
   when: result_install_packages.failed == false
 
-- name: Install Gitlab
-  shell: EXTERNAL_URL="https://gitlab.digidyn.ad" apt-get install gitlab-ce
+- name: Run Gitlab installation script
+  script: /tmp/script_gitlab.sh
+  become: yes
+  register: result_run_gitlab_script
+  when: result_dl_gitlab_script.failed == false
+
+- name: Set External URL environment variable
+  shell: EXTERNAL_URL="https://gitlab.digidyn.ad"
+  become: yes
+  register: result_set_ext_url
+  when: result_dl_gitlab_script.failed == false
+
+- name: Install Gitlab package
+  apt:
+    pkg: gitlab-ce
   become: yes
   register: result_install_gitlab
-  when: result_dl_gitlab_script.failed == false
+  when: result_set_ext_url.failed == false
 
 - name: Read initial_root_password file
   shell: "cat /etc/gitlab/initial_root_password | grep Password:"
