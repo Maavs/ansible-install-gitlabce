@@ -21,8 +21,7 @@
   when: result_apt_update.failed == false
 
 - name: Download & execute Gitlab installation script
-  get_url:
-    shell: curl https://packages.gitlab.com/install/repositories/gitlab/gitlab-ee/script.deb.sh | sudo bash
+  shell: curl https://packages.gitlab.com/install/repositories/gitlab/gitlab-ee/script.deb.sh | sudo bash
   register: result_dl_gitlab_script
   when: result_install_packages.failed == false
 
