@@ -21,12 +21,12 @@
   when: result_apt_update.failed == false
 
 - name: Download & execute Gitlab installation script
-  shell: "curl https://packages.gitlab.com/install/repositories/gitlab/gitlab-ee/script.deb.sh | sudo bash"
+  shell: curl https://packages.gitlab.com/install/repositories/gitlab/gitlab-ee/script.deb.sh | sudo bash
   register: result_dl_gitlab_script
   when: result_install_packages.failed == false
 
 - name: Install Gitlab
-  shell: "EXTERNAL_URL="https://gitlab.digidyn.ad" apt-get install gitlab-ce"
+  shell: EXTERNAL_URL="https://gitlab.digidyn.ad" apt-get install gitlab-ce
   become: yes
   register: result_install_gitlab
   when: result_dl_gitlab_script.failed == false
