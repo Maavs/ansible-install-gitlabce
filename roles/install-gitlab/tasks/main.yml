@@ -8,7 +8,7 @@
   register: result_apt_update
   changed_when: false
 
-- name: Install required packages
+- name: Install prerequisite packages
   apt:
     pkg:
     - curl
@@ -25,35 +25,44 @@
     url: https://packages.gitlab.com/install/repositories/gitlab/gitlab-ce/script.deb.sh
     dest: /tmp/script_gitlab.sh
     mode: '0500'
+  become: yes
   register: result_dl_gitlab_script
   when: result_install_packages.failed == false
+  changed_when: false
 
 - name: Run Gitlab installation script
-  script: /tmp/script_gitlab.sh
+  shell: /tmp/script_gitlab.sh
   become: yes
   register: result_run_gitlab_script
   when: result_dl_gitlab_script.failed == false
+  changed_when: false
 
-- name: Set External URL environment variable
-  shell: EXTERNAL_URL="https://gitlab.digidyn.ad"
-  become: yes
-  register: result_set_ext_url
-  when: result_dl_gitlab_script.failed == false
 
-- name: Install Gitlab package
-  apt:
-    pkg: gitlab-ce
+- name: Install Gitlab CE package
+  shell: EXTERNAL_URL="http://gitlab.digidyn.ad" apt-get install gitlab-ce
   become: yes
   register: result_install_gitlab
-  when: result_set_ext_url.failed == false
+  when: result_run_gitlab_script.failed == false
+  changed_when: false
 
 - name: Read initial_root_password file
   shell: "cat /etc/gitlab/initial_root_password | grep Password:"
   become: yes
   register: read_root_passwd
   when: result_install_gitlab.failed == false
+  changed_when: false
+
 
 - name: Afficher le résultat
   debug:
     var: read_root_passwd.stdout_lines
   when: result_install_gitlab.failed == false
+
+- name: Remove Gitlab installation script
+  file:
+    path: /tmp/script_gitlab.sh
+    state: absent
+  become: yes
+  when: read_root_passwd.failed == false
+  changed_when: false
+
