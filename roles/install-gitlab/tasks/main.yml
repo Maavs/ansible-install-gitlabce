@@ -8,7 +8,7 @@
   register: result_apt_update
   changed_when: false
 
-- name: Install prerequisite packages
+- name: Install prerequisites packages
   apt:
     pkg:
     - curl
@@ -39,7 +39,7 @@
 
 
 - name: Install Gitlab CE package
-  shell: EXTERNAL_URL="http://gitlab.digidyn.ad" apt-get install gitlab-ce
+  shell: EXTERNAL_URL="http://gitlab.example.com" apt-get install gitlab-ce
   become: yes
   register: result_install_gitlab
   when: result_run_gitlab_script.failed == false
@@ -53,16 +53,14 @@
   changed_when: false
 
 
-- name: Afficher le résultat
+- name: Display root initial password
   debug:
     var: read_root_passwd.stdout_lines
   when: result_install_gitlab.failed == false
 
-- name: Remove Gitlab installation script
+- name: Remove Gitlab installation script file
   file:
     path: /tmp/script_gitlab.sh
     state: absent
   become: yes
   when: read_root_passwd.failed == false
-  changed_when: false
-
