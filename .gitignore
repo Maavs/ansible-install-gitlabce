@@ -1,3 +1,5 @@
 ansible.cfg
 logfile.log
 vars/
+inventory
+hosts
